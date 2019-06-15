@@ -12,12 +12,11 @@ const pg = require('pg');
 // DATABASE SETUP
 const client = new pg.Client(process.env.DATABASE_URL);
 client.connect();
-client.on('error', err => console.error(err)); //check to see if it works.
+client.on('error', error => console.error(error)); //check to see if it works.
 
 // Application Setup
 const PORT = process.env.PORT;
 const app = express();
-
 app.use(cors());
 
 app.get('/location', handleLocationRequest);
@@ -28,61 +27,48 @@ app.get('/events', handleEvents);
 //  route handles/////////////////////////////
 
 function handleLocationRequest(request, response){
+  const sql = `SELECT  * FROM locations WHERE search_query='${query}'`;
 
-  const sql = `SELECT * FROM locations WHERE search_query='${query}'`;
-
-  return client.query(sql)
+ return client.query(sql)
     .then(results => {
-      if(results.rowCount > 0) {
-        console.log('...............from cache!');
+      if (results.rowCount > 0) {
+        console.log('.............from cache!')
         return results.rows;
       } else {
         const URL = `https://maps.googleapis.com/maps/api/geocode/json?address=${request.query.data}&key=${process.env.GEO_API_KEY}`;
+
         return superagent.get(URL)
-          .then(response => {
-            let location = new Location(query, response.body.results[0] );
+          .then(res => {
+          
+             // CREATING AN INSTANCE OF LOCATION////////////////////////////////////////////////////////
+           
 
+            const location = new Location(request.query.data, res.body  );
 
+            // INSERTING THE NEW DATA INTO THE DATABASE////////////////////////////////////////////////////////
+           
             const insertSQL = `
-        INSERT INTO locations (search_query, formatted_query, latitude, longitude)
-        VALUES('${location.search_query}','${location.formatted_query}', ${location.latitude}, ${location.longitude});
-        `;
+            INSERT INTO locations (search_query, formatted_query, latitude, longitude)
+            VALUES('${location.search_query}''${location.formatted_query}', ${location.latitude}, ${location.longitude})
+            `;
+            // ENTERING DATA INTO OUR SQL TABLES ////////////////////////////////////////////////////////
+
             return client.query(insertSQL).then(results => {
-              console.log('insert status', results.rows);
-              console.log('.................from api and cached!')
+              console.log('.............from API!!');
+              console.log('insert status', results.rows)
+
               return location;
-            }).catch(err => console.error(err));
-
-
+            }).catch(error => console.error(error));
+        
           })
-          .catch(error => {
-            console.error(error);
-          });
-      }
-    })
-    .catch(err => console.error(err));
-// if so then return "cached" version
-// SELECT * FROM locations WHERE search_query = the query passed
-// if not do below
-//
-}
+          .catch(error=>{
+            handleError(error, response);
+          })
+        }
+    }
+  }
+      .catch(error => console.error(error));
 
-
-
-
-const URL = `https://maps.googleapis.com/maps/api/geocode/json?address=${request.query.data}&key=${process.env.GEO_API_KEY}`;
-
-return superagent.get(URL)
-  .then(res => {
-    const location = new Location(request.query.data, res.body);
-
-    // console.log('the location', location);
-    response.send(location);
-  })
-
-  .catch(error=>{
-    handleError(error, response);
-  })
 
 
 
