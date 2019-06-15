@@ -71,31 +71,31 @@ function handleLocationRequest(request, response){
 
 
 
-/////////////NEW AND BROKEN CODE/////////////////////////////////
 
-// function handleWeatherRequest(request, response){
-//   const URL = `https://api.darksky.net/forecast/${process.env.DARK_SKY_API}/${request.query.data.latitude},${request.query.data.longitude}`;
-//   // console.log('URL' ,URL)
-//   return superagent.get(URL)
+function handleWeatherRequest(request, response){
+  const URL = `https://api.darksky.net/forecast/${process.env.DARK_SKY_API}/${request.query.data.latitude},${request.query.data.longitude}`;
+  // console.log('URL' ,URL)
+  return superagent.get(URL)
 
-//     .then(res => {
-//       let weatherArray = res.body.daily.data.map(day => {
-//         let weather = new Weather(day);
+    .then(res => {
+      let weatherArray = res.body.daily.data.map(day => {
+        let weather = new Weather(day);
 
-//         // console.log('weather', weather);
-//         return weather;
-//       })
+        // console.log('weather', weather);
+        return weather;
+      })
 
-//       // console.log('weather array' , weatherArray)
-//       response.send(weatherArray);
-//     })
+      // console.log('weather array' , weatherArray)
+      response.send(weatherArray);
+    })
 
-//     .catch(error=>{
-//       handleError(error, response);
-//     })
-// }
+    .catch(error=>{
+      handleError(error, response);
+    })
+}
 
 // /////////IN THE PROCESS OF REFACTORING////////////////////////////////////
+/////////////NEW AND BROKEN CODE/////////////////////////////////
 
 
 
@@ -150,13 +150,13 @@ function handleLocationRequest(request, response){
 //   });
 // }
 
-// function handleWeather
+// function handleWeatherRequest(request, response){
 // getWeather(request.query)
 // .then(data => response.send(data))
 // .catch(error => handleError(error) )
 // }
 
-// function getWeather
+// function getWeather;
 
 
 
