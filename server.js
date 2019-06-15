@@ -29,7 +29,7 @@ app.get('/events', handleEvents);
 function handleLocationRequest(request, response){
   const sql = `SELECT  * FROM locations WHERE search_query='${query}'`;
 
- return client.query(sql)
+  return client.query(sql)
     .then(results => {
       if (results.rowCount > 0) {
         console.log('.............from cache!')
@@ -38,15 +38,15 @@ function handleLocationRequest(request, response){
         const URL = `https://maps.googleapis.com/maps/api/geocode/json?address=${request.query.data}&key=${process.env.GEO_API_KEY}`;
 
         return superagent.get(URL)
-          .then(res => {
-          
-             // CREATING AN INSTANCE OF LOCATION////////////////////////////////////////////////////////
-           
+          .then(response => {
 
-            const location = new Location(request.query.data, res.body  );
+            // CREATING AN INSTANCE OF LOCATION////////////////////////////////////////////////////////
+
+
+            const location = new Location(request.query.data, response.body );
 
             // INSERTING THE NEW DATA INTO THE DATABASE////////////////////////////////////////////////////////
-           
+
             const insertSQL = `
             INSERT INTO locations (search_query, formatted_query, latitude, longitude)
             VALUES('${location.search_query}''${location.formatted_query}', ${location.latitude}, ${location.longitude})
@@ -59,16 +59,15 @@ function handleLocationRequest(request, response){
 
               return location;
             }).catch(error => console.error(error));
-        
+
           })
           .catch(error=>{
             handleError(error, response);
           })
-        }
-    }
-  }
-      .catch(error => console.error(error));
-
+      }
+    })
+    .catch(error => console.error(error));
+}
 
 
 
@@ -94,6 +93,71 @@ function handleWeatherRequest(request, response){
       handleError(error, response);
     })
 }
+
+// /////////IN THE PROCESS OF REFACTORING////////////////////////////////////
+/////////////NEW AND BROKEN CODE/////////////////////////////////
+
+
+
+
+// function handleLocations(request, response){
+//   console.log(request.query.data);
+//   getLocation(request.query.data)
+//     .then(location => response.send(location))
+//     .catch(error => handleError(error, response) )
+// }
+
+// function getLocation(query){
+
+//   return getCachedLocation(query).then(location => {
+//     if (location){
+//       return location;
+//     } else {
+//       return getLocationAPI(query)
+//         .then(location => cacheLocation(location));
+//     }
+//   })
+// }
+
+// function getCachedLocation(query){
+//   const sql = `SELECT  * FROM locations WHERE search_query='${query}'` ;
+
+//   return client.query(sql).then(result => result.rows[0]);
+// }
+
+// function getLocationAPI(query){
+//   const URL = `https://maps.googleapis.com/maps/api/geocode/json?address=${query}&key=${process.env.GEO_API_KEY}`;
+//   return superagent.get(URL)
+//     .then(response => {
+//       // CREATING AN INSTANCE OF LOCATION////////////////////////////////////////////////////////
+//       let location = new Location(query, response.body.results[0]);
+
+
+//       return location;
+//     });
+// }
+
+// function cacheLocation(location){
+//   const insertSQL = `
+//             INSERT INTO locations (search_query, formatted_query, latitude, longitude)
+//             VALUES('${location.search_query}''${location.formatted_query}', ${location.latitude}, ${location.longitude})
+//             `;
+//   // ENTERING DATA INTO OUR SQL TABLES ////////////////////////////////////////////////////////
+
+//   return client.query(insertSQL).then(results => {
+//     console.log('insert status', results.rows)
+//     return location;
+//   });
+// }
+
+// function handleWeatherRequest(request, response){
+// getWeather(request.query)
+// .then(data => response.send(data))
+// .catch(error => handleError(error) )
+// }
+
+// function getWeather;
+
 
 
 
